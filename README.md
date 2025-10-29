@@ -5,11 +5,10 @@ The driver is designed for efficiency and ease of use, utilizing a local 1KB fra
 
 **Key Features**
 
- Chip Compatibility: Verified working on  ESP32-S3.
-
-API: Uses the stable, legacy ESP-IDF I2C master driver API (driver/i2c.h) for maximum compatibility across different ESP-IDF versions.
-Drawing Primitives: Full set of functions for drawing individual pixels, lines (screen_draw_line), rectangles (screen_draw_rect), and rounded rectangles (screen_draw_rrect).
-Text & Graphics: Built-in 5x8 pixel font and support for drawing external column-major bitmaps (screen_draw_bitmap).
+__Verified working on  ESP32-S3.__
+__Uses the stable, legacy ESP-IDF I2C master driver API (driver/i2c.h) for maximum compatibility across different ESP-IDF versions.__
+__Full set of functions for drawing individual pixels, lines (screen_draw_line), rectangles (screen_draw_rect), and rounded rectangles (screen_draw_rrect).__
+__Built-in 5x8 pixel font and support for drawing external column-major bitmaps (screen_draw_bitmap).__
 
  Getting Started
 
@@ -34,9 +33,8 @@ You must open components/ssd1306_i2c/ssd1306_i2c.h and update the GPIO pins to m
 
 Recommended ESP32 Pinout
 
-**2C_MASTER_SCL_IO --> 10**
-
-**I2C_MASTER_SDA_IO -->  9**
+2C_MASTER_SCL_IO --> 10,  
+ I2C_MASTER_SDA_IO -->  9
 
 
 **The full list of configurable items in the header file:**
