@@ -20,7 +20,7 @@ Clone this repository into the components folder of your main ESP-IDF project:
 
 ```mkdir -p components/ssd1306_i2c```
 
-```git clone [https://github.com/Raisback/ssd1306_esp_idf.git](https://github.com/Raisback/ssd1306_esp_idf.git) components/ssd1306_i2c```
+```git clone https://github.com/Raisback/ssd1306_esp_idf.git components/ssd1306_i2c```
 
 
 ## 2. Update Configuration (Crucial Step)
