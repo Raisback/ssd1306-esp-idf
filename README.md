@@ -1,5 +1,7 @@
 # Lightweight SSD1306 (128x64) I2C Driver for ESP-IDF (ESP32 & ESP32-S3)
 
+![128x64 OLED Display](images/128x64_OLED.png)
+
 This is a portable and efficient I2C driver for the standard 128x64 pixel SSD1306 OLED display, developed for the Espressif IoT Development Framework (ESP-IDF).
 The driver is designed for efficiency and ease of use, utilizing a local 1KB framebuffer in SRAM for fast, flicker-free drawing operations before pushing the complete image to the display.
 
