@@ -57,7 +57,7 @@ const uint8_t font_table[][5] = {
     {0x20, 0x40, 0x44, 0x3D, 0x00},  // j
     {0x7F, 0x10, 0x28, 0x44, 0x00},  // k
     {0x00, 0x01, 0x7F, 0x40, 0x00},  // l 
-    {0x7C, 0x04, 0x18, 0x04, 0x78},  // m
+    {0x7C, 0x04, 0x04, 0x04, 0x78},  // m
     {0x7C, 0x04, 0x04, 0x04, 0x78},  // n
     {0x38, 0x44, 0x44, 0x44, 0x38},  // o
     {0x7C, 0x14, 0x14, 0x14, 0x08},  // p 
@@ -227,11 +227,11 @@ void screen_draw_rect(int16_t x, int16_t y, int16_t w, int16_t h, uint8_t set)
     screen_draw_line(x + w - 1, y, x + w - 1, y + h - 1, set);
 }
 
-void screen_draw_frect(int16_t x, int16_t y, int16_t w, int16_t h, uint8_t set)
+void screen_draw_frect(int16_t x, int16_t y, int16_t w, int16_t t, uint8_t set)
 {
     // Simple vertical line fill method
     for (int16_t i = x; i < x + w; i++) {
-        screen_draw_line(i, y, i, y + h - 1, set);
+        screen_draw_line(i, y, i, y + t - 1, set);
     }
 }
 
@@ -331,63 +331,81 @@ void screen_draw_rfrect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, u
 
 void screen_draw_char(uint8_t x_start, uint8_t y_start, char c, uint8_t set)
 {
-
-
+    // --- 1. Get Character Data ---
     int char_index = c - 32;
     if (char_index < 0 || char_index >= sizeof(font_table) / sizeof(font_table[0])) {
         char_index = 0; 
     }
     const uint8_t *char_data = font_table[char_index];
 
+    // --- 2. Calculate Vertical Offsets ---
     uint8_t page_start = y_start / 8;
     uint8_t v_offset = y_start % 8;       
     uint8_t v_shift_down = 8 - v_offset;   
     
-
+    // --- 3. Boundary Check ---
     if (x_start + 5 >= OLED_WIDTH || page_start >= OLED_HEIGHT / 8) {
         return;
     }
 
-
+    // --- 4. Iterate and Draw Character Columns (5 columns wide) ---
     for (int i = 0; i < 5; i++) {
         uint8_t col_data = char_data[i];
         uint16_t x_pos = x_start + i;
 
-
+        // --- Page 1 (Current Page) ---
         uint16_t buffer_index_p1 = x_pos + page_start * OLED_WIDTH;
 
-        uint8_t p1_new_data = col_data << v_offset;
-        uint8_t mask_p1 = (0xFF << v_offset); // Mask for the bits being modified
-
-        oled_buffer[buffer_index_p1] &= ~mask_p1;
-        oled_buffer[buffer_index_p1] |= (set ? p1_new_data : 0); // Use ternary operator for 'set'
-
-
+        // Mask for the bits to be set (foreground) on P1
+        uint8_t p1_set_bits = col_data << v_offset;
+        
+        // --- FIX: Only modify bits where the font stroke is drawn ---
+        if (set) {
+            // Foreground ON: Use OR operation to set the stroke bits
+            oled_buffer[buffer_index_p1] |= p1_set_bits;
+        } else {
+            // Foreground OFF: Use AND operation with the inverted stroke bits to clear them
+            oled_buffer[buffer_index_p1] &= ~p1_set_bits;
+        }
+        
+        // --- Page 2 (Next Page, if needed) ---
         if (v_offset > 0 && (page_start + 1) < OLED_HEIGHT / 8) {
             uint16_t buffer_index_p2 = x_pos + (page_start + 1) * OLED_WIDTH;
 
-            uint8_t p2_new_data = col_data >> v_shift_down;
-            uint8_t mask_p2 = (0xFF >> v_shift_down);
+            // Mask for the bits to be set (foreground) on P2
+            uint8_t p2_set_bits = col_data >> v_shift_down;
             
-            oled_buffer[buffer_index_p2] &= ~mask_p2;
-            oled_buffer[buffer_index_p2] |= (set ? p2_new_data : 0); // Use ternary operator for 'set'
+            // --- FIX: Only modify bits where the font stroke is drawn ---
+            if (set) {
+                // Foreground ON: Use OR operation to set the stroke bits
+                oled_buffer[buffer_index_p2] |= p2_set_bits;
+            } else {
+                // Foreground OFF: Use AND operation with the inverted stroke bits to clear them
+                oled_buffer[buffer_index_p2] &= ~p2_set_bits;
+            }
         }
     }
     
-    // --- Spacer Column (Column 6) ---
+    // --- 5. Spacer Column (Column 6) ---
+    // The spacer column (x_start + 5) must NOT clear any pixels.
+    // It is effectively transparent to the background.
+    // Since we are now using bitwise OR/AND and not clearing the area, the spacer logic should be removed or commented out.
+    // screen_draw_str handles the spacing by advancing current_x by 6.
+    /*
     uint16_t spacer_x_pos = x_start + 5;
     if (spacer_x_pos < OLED_WIDTH) {
   
         uint16_t buffer_index_spacer_p1 = spacer_x_pos + page_start * OLED_WIDTH;
         uint8_t mask_spacer_p1 = (0xFF << v_offset); 
-        oled_buffer[buffer_index_spacer_p1] &= ~mask_spacer_p1;
+        oled_buffer[buffer_index_spacer_p1] &= ~mask_spacer_p1; // <-- This was part of the problem!
 
         if (v_offset > 0 && (page_start + 1) < OLED_HEIGHT / 8) {
             uint16_t buffer_index_spacer_p2 = spacer_x_pos + (page_start + 1) * OLED_WIDTH;
             uint8_t mask_spacer_p2 = (0xFF >> v_shift_down);
-            oled_buffer[buffer_index_spacer_p2] &= ~mask_spacer_p2;
+            oled_buffer[buffer_index_spacer_p2] &= ~mask_spacer_p2; // <-- This was also part of the problem!
         }
     }
+    */
 }
 
 void screen_draw_str(uint8_t x, uint8_t y, const char *str, uint8_t set)
