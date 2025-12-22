@@ -22,7 +22,7 @@
 // Local Frame Buffer (128 columns * 8 pages = 1024 bytes)
 static uint8_t oled_buffer[OLED_WIDTH * OLED_PAGE_COUNT];
 
-// --- 5x8 PIXEL FONT TABLE (Shortened for brevity) ---
+// --- 5x8 PIXEL FONT TABLE  ---
 const uint8_t font_table[][5] = {
     // 32 ' '
     {0x00, 0x00, 0x00, 0x00, 0x00},
@@ -114,7 +114,7 @@ void screen_init()
     };
 
     ESP_ERROR_CHECK(i2c_param_config(I2C_MASTER_NUM, &conf));
-    // FIX: Replaced I2C_MASTER_RX_BUF_DISABLE and I2C_MASTER_TX_BUF_DISABLE with 0
+
     // This is required for newer ESP-IDF versions (like v5.x)
     ESP_ERROR_CHECK(i2c_driver_install(I2C_MASTER_NUM, conf.mode, 0, 0, 0));
     ESP_LOGI(TAG, "I2C Master initialized and driver installed.");
